@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI 起名平台 · 多模型版</title>
+<style>
+  :root{
+    --ink:#14181f;
+    --ink-2:#4a5567;
+    --ink-3:#8a94a6;
+    --line:#e6e9f0;
+    --bg:#f6f7fb;
+    --card:#ffffff;
+    --brand:#2f5bea;
+    --brand-soft:#eef2ff;
+    --ok:#12a150;
+    --warn:#c2410c;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 64px;}
+  header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .brand h1{margin:0;font-size:24px;letter-spacing:.5px;}
+  .brand p{margin:6px 0 0;color:var(--ink-3);font-size:13px;}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;
+    background:var(--brand-soft);color:var(--brand);font-size:12px;font-weight:600;
+  }
+  .layout{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start;}
+  @media (max-width:900px){.layout{grid-template-columns:1fr;}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 1px 2px rgba(20,24,31,.04);}
+  .card .hd{padding:16px 18px 0;}
+  .card .hd h2{margin:0;font-size:15px;font-weight:600;}
+  .card .hd .tip{margin:6px 0 0;font-size:12px;color:var(--ink-3);line-height:1.6;}
+  .card .bd{padding:14px 18px 18px;}
+
+  label.field{display:block;font-size:12px;color:var(--ink-2);margin:0 0 6px;font-weight:600;}
+  textarea,select,input{
+    width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+    font-size:14px;color:var(--ink);background:#fbfcfe;outline:none;font-family:inherit;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  textarea{min-height:104px;resize:vertical;line-height:1.6;}
+  textarea:focus,select:focus,input:focus{border-color:#c3cffa;box-shadow:0 0 0 3px rgba(47,91,234,.08);background:#fff;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+  .field-block{margin-top:14px;}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .chip{
+    border:1px solid var(--line);background:#fff;color:var(--ink-2);border-radius:999px;
+    padding:5px 10px;font-size:12px;cursor:pointer;user-select:none;
+  }
+  .chip:hover{border-color:#c3cffa;color:var(--brand);}
+  button.primary{
+    margin-top:18px;width:100%;border:0;border-radius:10px;padding:12px 16px;
+    background:linear-gradient(135deg,#3a66f2,#2f5bea);color:#fff;font-size:14px;font-weight:600;
+    cursor:pointer;transition:transform .12s, box-shadow .12s;
+  }
+  button.primary:hover{box-shadow:0 8px 20px rgba(47,91,234,.22);}
+  button.primary:active{transform:translateY(1px);}
+  button.primary[disabled]{opacity:.55;cursor:not-allowed;box-shadow:none;}
+  .status{margin-top:12px;font-size:12px;color:var(--ink-3);min-height:18px;line-height:1.6;}
+  .status.err{color:var(--warn);}
+  .status.ok{color:var(--ok);}
+
+  .result-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .model-tag{font-size:12px;color:var(--ink-3);}
+  .out{
+    min-height:360px;margin-top:12px;padding:18px;border-radius:12px;background:#fafbff;border:1px dashed #dfe5f5;
+    font-size:14px;line-height:1.9;color:var(--ink);white-space:pre-wrap;word-break:break-word;
+  }
+  .out.empty{color:var(--ink-3);display:flex;align-items:center;justify-content:center;text-align:center;}
+  .cursor{display:inline-block;width:7px;height:15px;background:var(--brand);border-radius:2px;vertical-align:middle;animation:blink 1s infinite;}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+  .history{margin-top:18px;}
+  .hist-list{display:grid;gap:8px;max-height:280px;overflow:auto;}
+  .hist-item{
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;background:#fbfcfe;
+  }
+  .hist-item:hover{border-color:#c3cffa;background:#fff;}
+  .hist-item .h-top{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--ink-3);}
+  .hist-item .h-req{margin-top:6px;font-size:13px;color:var(--ink);}
+  .hist-item .h-model{color:var(--brand);font-weight:600;}
+  footer{margin-top:26px;text-align:center;font-size:12px;color:var(--ink-3);line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>AI 起名平台</h1>
+      <p>多模型切换 · 流式输出 · 历史留档（Vercel + Supabase）</p>
+    </div>
+    <span class="badge" id="modelCount">4 个大模型可选</span>
+  </header>
+
+  <div class="layout">
+    <section class="card">
+      <div class="hd">
+        <h2>说出你的起名需求</h2>
+        <p class="tip">越具体越好：姓氏、性别、期望气质、忌讳字都能写进去。</p>
+      </div>
+      <div class="bd">
+        <div class="field-block">
+          <label class="field" for="req">起名需求</label>
+          <textarea id="req" placeholder="例如：男孩，姓林，国风、简约，希望名字有书卷气，不要太生僻"></textarea>
+          <div class="chips">
+            <span class="chip" data-fill="女孩，姓苏，国风，取自古诗词，温柔雅致">女孩·国风</span>
+            <span class="chip" data-fill="男孩，姓林，现代简约，读音干净好写">男孩·简约</span>
+            <span class="chip" data-fill="女孩，姓陈，需要中文名和对应的英文名，气质国际化">中英双名</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label class="field" for="model">模型</label>
+            <select id="model">
+              <option value="doubao">豆包（火山方舟）</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="qwen">通义千问</option>
+              <option value="kimi">Kimi</option>
+            </select>
+          </div>
+          <div>
+            <label class="field" for="style">起名风格</label>
+            <select id="style">
+              <option value="modern">现代简约</option>
+              <option value="guofeng">国风古典</option>
+              <option value="english">英文名</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="primary" id="go">开始起名</button>
+        <div class="status" id="status"></div>
+      </div>
+    </section>
+
+    <div>
+      <section class="card">
+        <div class="hd">
+          <div class="result-head">
+            <h2>起名方案</h2>
+            <span class="model-tag" id="meta">等待生成</span>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="out empty" id="out">输入需求，点「开始起名」，名字会一个字一个字地流出来</div>
+        </div>
+      </section>
+
+      <section class="card history">
+        <div class="hd">
+          <div class="result-head">
+            <h2>历史记录</h2>
+            <span class="model-tag" id="histMeta">来自 Supabase</span>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="hist-list" id="histList"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <footer>密钥全部走环境变量，前端不接触任何 API Key</footer>
+</div>
+
+<script>
+const out = document.getElementById('out');
+const statusEl = document.getElementById('status');
+const goBtn = document.getElementById('go');
+const metaEl = document.getElementById('meta');
+const histList = document.getElementById('histList');
+const histMeta = document.getElementById('histMeta');
+
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => { document.getElementById('req').value = c.dataset.fill; });
+});
+
+function setStatus(text, cls) {
+  statusEl.textContent = text || '';
+  statusEl.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+// 轻量 Markdown 渲染：只处理标题、加粗、列表，够实验演示用
+function render(text) {
+  const esc = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return esc
+    .replace(/^###\s+(.+)$/gm, '<div style="font-weight:700;font-size:15px;margin:14px 0 4px">$1</div>')
+    .replace(/^##\s+(.+)$/gm, '<div style="font-weight:700;font-size:16px;margin:16px 0 6px">$1</div>')
+    .replace(/^#\s+(.+)$/gm, '<div style="font-weight:700;font-size:17px;margin:16px 0 6px">$1</div>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^\s*[-*]\s+/gm, '· ');
+}
+
+async function start() {
+  const requirement = document.getElementById('req').value.trim();
+  const model = document.getElementById('model').value;
+  const style = document.getElementById('style').value;
+  if (!requirement) { setStatus('请先填写起名需求', 'err'); return; }
+
+  goBtn.disabled = true;
+  out.className = 'out';
+  out.textContent = '';
+  setStatus('请求中…');
+  metaEl.textContent = '生成中…';
+
+  let acc = '';
+  const t0 = performance.now();
+
+  try {
+    const resp = await fetch('/api/name', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requirement, model, style })
+    });
+
+    if (!resp.ok) {
+      const j = await resp.json().catch(() => ({ error: '请求失败' }));
+      out.className = 'out empty';
+      out.textContent = j.error || '请求失败';
+      setStatus(j.error || '请求失败', 'err');
+      metaEl.textContent = '失败';
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop() || '';
+      for (const part of parts) {
+        for (const line of part.split('\n')) {
+          if (!line.startsWith('data:')) continue;
+          const raw = line.slice(5).trim();
+          if (!raw) continue;
+          let evt;
+          try { evt = JSON.parse(raw); } catch { continue; }
+          if (evt.type === 'delta') {
+            acc += evt.content;
+            out.innerHTML = render(acc) + '<span class="cursor"></span>';
+          } else if (evt.type === 'meta') {
+            metaEl.textContent = evt.modelLabel + ' · ' + evt.modelName;
+          } else if (evt.type === 'done') {
+            const secs = ((performance.now() - t0) / 1000).toFixed(1);
+            setStatus(evt.saved ? `完成，用时 ${secs}s，已存入 Supabase` : `完成，用时 ${secs}s（历史未入库：${evt.saveError || '未知原因'}）`, evt.saved ? 'ok' : 'err');
+            loadHistory();
+          } else if (evt.type === 'error') {
+            setStatus(evt.message, 'err');
+          }
+        }
+      }
+    }
+    out.innerHTML = render(acc);
+  } catch (e) {
+    setStatus('网络异常：' + e.message, 'err');
+  } finally {
+    goBtn.disabled = false;
+  }
+}
+
+goBtn.addEventListener('click', start);
+document.getElementById('req').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') start();
+});
+
+async function loadHistory() {
+  histList.innerHTML = '<div style="font-size:12px;color:#8a94a6">加载中…</div>';
+  try {
+    const r = await fetch('/api/history');
+    const j = await r.json();
+    if (j.error) {
+      histMeta.textContent = '读取失败';
+      histList.innerHTML = `<div style="font-size:12px;color:#c2410c">${j.error}</div>`;
+      return;
+    }
+    histMeta.textContent = `最近 ${j.items.length} 条`;
+    if (!j.items.length) {
+      histList.innerHTML = '<div style="font-size:12px;color:#8a94a6">还没有记录，先起一个名字吧</div>';
+      return;
+    }
+    histList.innerHTML = '';
+    for (const it of j.items) {
+      const div = document.createElement('div');
+      div.className = 'hist-item';
+      const time = (it.created_at || '').replace('T', ' ').slice(0, 16);
+      div.innerHTML = `
+        <div class="h-top"><span class="h-model">${it.model_name}</span><span>${time}</span></div>
+        <div class="h-req">${(it.user_requirement || '').slice(0, 60)}</div>`;
+      div.addEventListener('click', () => {
+        out.className = 'out';
+        out.innerHTML = render(it.name_result || '');
+        metaEl.textContent = it.model_name;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      histList.appendChild(div);
+    }
+  } catch (e) {
+    histMeta.textContent = '读取失败';
+  }
+}
+
+loadHistory();
+</script>
+</body>
+</html>
