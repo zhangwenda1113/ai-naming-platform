@@ -2,7 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * 阶段 1 留档：单模型版本（文档驱动跑通的那一版）
- * 只接豆包一家，直接照着火山方舟官方 curl 示例写 fetch。
+ * 只接豆包一家，直接照着火山方舟官方 curl 示例写 fetch：
+ *   curl https://ark.cn-beijing.volces.com/api/v1/chat/completions \\
+ *     -H "Content-Type: application/json" \\
+ *     -H "Authorization: Bearer $DOUBAO_API_KEY" \\
+ *     -d '{"model":"ep-xxx","messages":[...],"stream":true}'
+ *
  * 阶段 2 的成果在 /api/name.js：把地址、密钥、模型名抽成 modelConfigMap，
  * 一套调用代码支持 4 家模型。这份文件只作为实验过程证据保留。
  */
@@ -68,8 +73,9 @@ export default async function handler(req, res) {
     buf = parts.pop() || '';
     for (const part of parts) {
       for (const line of part.split('\n')) {
-        if (!line.startsWith('data:')) continue;
-        const raw = line.slice(5).trim();
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const raw = trimmed.slice(5).trim();
         if (!raw || raw === '[DONE]') continue;
         try {
           const json = JSON.parse(raw);
