@@ -29,7 +29,7 @@ vercel dev                  # 打开 http://localhost:3000
 | 变量 | 说明 |
 | --- | --- |
 | `DOUBAO_API_KEY` | 火山方舟密钥（Ark API Key） |
-| `DOUBAO_MODEL` | 方舟推理接入点 ID（`ep-xxxx`）或模型名，不填用默认值 |
+| `DOUBAO_MODEL` | 方舟模型名，默认 `doubao-seed-2-1-lite-260915`（需先在方舟控制台「开通服务」） |
 | `DEEPSEEK_API_KEY` | DeepSeek 密钥 |
 | `QWEN_API_KEY` | 阿里云百炼 / DashScope 密钥 |
 | `KIMI_API_KEY` | 月之暗面密钥 |
@@ -49,6 +49,12 @@ vercel dev                  # 打开 http://localhost:3000
 ## 换模型 / 加模型
 
 只改 `api/name.js` 里的 `modelConfigMap`：新增一个 `{ label, baseURL, apiKeyEnv, defaultModel }`，前端下拉框加一行即可，主调用代码不动。
+
+## 当前线上状态
+
+- 生产域名：https://ai-naming-platform-steel.vercel.app
+- 已接通模型：豆包 `doubao-seed-2-1-lite-260915`（火山方舟，`api/v3` 路径，关闭深度思考以降低首字延迟），其余三家等各自平台密钥
+- 历史记录：Supabase `public.name_history`，流结束后自动落库
 
 ## 安全
 
