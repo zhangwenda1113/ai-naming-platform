@@ -29,7 +29,8 @@ export const modelConfigMap = {
     label: 'Kimi（月之暗面）',
     baseURL: 'https://api.moonshot.cn/v1',
     apiKeyEnv: 'KIMI_API_KEY',
-    defaultModel: 'moonshot-v1-8k'
+    modelEnv: 'KIMI_MODEL',
+    defaultModel: 'kimi-k3'
   }
 };
 
